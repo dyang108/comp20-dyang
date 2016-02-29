@@ -1,0 +1,13 @@
+body {
+    text-align: center;
+    background: url(beta-dark-background.jpg);
+    color: white;
+    font-family: Helvetica;
+}
+
+video {
+    max-width: 75%;
+}
+
+h1 {
+}

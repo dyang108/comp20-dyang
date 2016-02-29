@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>My Old Kentucky Home</title>
+<link rel="stylesheet" href="style.css" type="text/css" />
+</head>
+
+<body>
+
+<h1 id="title">My Old Kentucky Home</h1>
+
+<video src="https://www.cs.tufts.edu/comp/20/my_old_kentucky_home.mp4" id="music_video" controls></video>
+<div id="lyrics"></div>
+
+<script>
+    var video = document.getElementById("music_video");
+    var lyrics = document.getElementById("lyrics");
+    video.addEventListener("timeupdate", function() {
+        var ct = video.currentTime;
+        if (ct > 9 && ct < 15) {
+            lyrics.innerHTML = "The sun shines bright in \
+                My Old Kentucky Home,";
+        } else if (ct >= 15 && ct < 22) {
+            lyrics.innerHTML = "'Tis summer, the people are gay;";
+        } else if (ct >= 22 && ct < 28) {
+            lyrics.innerHTML = "The corn-top's ripe and \
+                the meadow's in the bloom";
+        } else if (ct >= 28 && ct < 35) {
+            lyrics.innerHTML = "While the birds make music all the day.";
+        } else if (ct >= 35 && ct < 42) {
+            lyrics.innerHTML = "The young folks roll on \
+                the little cabin floor,";
+        } else if (ct >= 42 && ct < 49) {
+            lyrics.innerHTML = "All merry, all happy and bright;";
+        } else if (ct >= 49 && ct < 55) {
+            lyrics.innerHTML = "By 'n' by hard times comes a \
+                knocking at the door,";
+        } else if (ct >=55 && ct < 63) {
+            lyrics.innerHTML = "Then My Old Kentucky Home, good night!";
+        } else if (ct >= 63 && ct < 69) {
+            lyrics.innerHTML = "Weep no more my lady";
+        } else if (ct >= 69 && ct < 75) {
+            lyrics.innerHTML = "Oh weep no more today;";
+        } else if (ct >= 75 && ct < 80) {
+            lyrics.innerHTML = "We will sing one song";
+        } else if (ct >= 80 && ct < 83) {
+            lyrics.innerHTML = "For My Old Kentucky Home";
+        } else if (ct >= 83 && ct < 93) {
+            lyrics.innerHTML = "For My Old Kentucky Home, far away";
+        } else {
+            lyrics.innerHTML = "";
+        }
+    });
+</script>
+</body>
+</html> 
