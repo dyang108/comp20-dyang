@@ -16,41 +16,55 @@
 <script>
     var video = document.getElementById("music_video");
     var lyrics = document.getElementById("lyrics");
+    var line = document.createElement("p");
+    lyrics.appendChild(line);
+    var img = document.createElement("img");
     video.addEventListener("timeupdate", function() {
+        console.log(video.currentTime);
         var ct = video.currentTime;
+        if (lyrics.childNodes[1]) {
+            lyrics.removeChild(lyrics.childNodes[1]);
+        }
         if (ct > 9 && ct < 15) {
-            lyrics.innerHTML = "The sun shines bright in \
+            line.innerHTML = "The sun shines bright in \
                 My Old Kentucky Home,";
         } else if (ct >= 15 && ct < 22) {
-            lyrics.innerHTML = "'Tis summer, the people are gay;";
+            line.innerHTML = "'Tis summer, the people are gay;";
         } else if (ct >= 22 && ct < 28) {
-            lyrics.innerHTML = "The corn-top's ripe and \
+            line.innerHTML = "The corn-top's ripe and \
                 the meadow's in the bloom";
         } else if (ct >= 28 && ct < 35) {
-            lyrics.innerHTML = "While the birds make music all the day.";
+            line.innerHTML = "While the birds make music all the day.";
+            img.setAttribute("src", "bird.png");
+            img.setAttribute("alt", "bird");
+            lyrics.appendChild(img);
         } else if (ct >= 35 && ct < 42) {
-            lyrics.innerHTML = "The young folks roll on \
+            line.innerHTML = "The young folks roll on \
                 the little cabin floor,";
         } else if (ct >= 42 && ct < 49) {
-            lyrics.innerHTML = "All merry, all happy and bright;";
+            line.innerHTML = "All merry, all happy and bright;";
         } else if (ct >= 49 && ct < 55) {
-            lyrics.innerHTML = "By 'n' by hard times comes a \
+            line.innerHTML = "By 'n' by hard times comes a \
                 knocking at the door,";
         } else if (ct >=55 && ct < 63) {
-            lyrics.innerHTML = "Then My Old Kentucky Home, good night!";
+            line.innerHTML = "Then My Old Kentucky Home, good night!";
         } else if (ct >= 63 && ct < 69) {
-            lyrics.innerHTML = "Weep no more my lady";
+            line.innerHTML = "Weep no more my lady";
         } else if (ct >= 69 && ct < 75) {
-            lyrics.innerHTML = "Oh weep no more today;";
+            line.innerHTML = "Oh weep no more today;";
         } else if (ct >= 75 && ct < 80) {
-            lyrics.innerHTML = "We will sing one song";
+            line.innerHTML = "We will sing one song";
         } else if (ct >= 80 && ct < 83) {
-            lyrics.innerHTML = "For My Old Kentucky Home";
+            line.innerHTML = "For My Old Kentucky Home";
         } else if (ct >= 83 && ct < 93) {
-            lyrics.innerHTML = "For My Old Kentucky Home, far away";
+            line.innerHTML = "For My Old Kentucky Home, far away";
+            img.setAttribute("src", "kentucky.gif");
+            img.setAttribute("alt", "kentucky");
+            lyrics.appendChild(img);
         } else {
-            lyrics.innerHTML = "";
+            line.innerHTML = "";
         }
+
     });
 </script>
 </body>
