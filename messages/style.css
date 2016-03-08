@@ -1,1 +1,18 @@
 /* Your CSS here... */
+body {
+    font-family: Helvetica Neue;
+}
+
+.msg {
+    background-color: #1aa3ff;
+    border-radius: 10px;
+    font-size: 20px;
+    margin-bottom: 0;
+    padding: 10px;
+}
+
+.sender {
+    color: #669999;
+    font-size: 15px;
+    margin-top: 2px;
+}
