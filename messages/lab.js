@@ -1,4 +1,3 @@
-// Your JavaScript goes here...
 function parse() {
     var request = new XMLHttpRequest();
     var messages = document.getElementById("messages");
