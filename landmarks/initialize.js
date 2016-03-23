@@ -59,7 +59,7 @@ function loadmap() {
                 center: loc,
                 mapTypeControl: false,
                 streetViewControl: false,
-                zoom: 17
+                zoom: 15
             });
             
             map.mapTypes.set('map_style', customMapType);
@@ -91,7 +91,7 @@ function makeRequest() {
     params = "login=" + login + "&lat=" + loc.lat + "&lng=" + loc.lng;
 
     request.open("POST", 
-        "https://defense-in-derpth.herokuapp.com/sendLocation", true);
+        "https://ancient-hollows-75857.herokuapp.com/sendLocation", true);
     request.setRequestHeader("Content-type", 
         "application/x-www-form-urlencoded");
 
@@ -127,7 +127,6 @@ function parseResponse(data) {
         });
         google.maps.event.addListener(person_marker, 'click', openPersonInfo);
     }
-
     for (var j = 0; j < data.landmarks.length; j++) {
         landmark = data.landmarks[j];
 
@@ -138,7 +137,6 @@ function parseResponse(data) {
         if (dist > 1) {
             continue;
         }
-
         landmark_marker = new google.maps.Marker({
             position: { lat: landmark.geometry.coordinates[1], 
                         lng: landmark.geometry.coordinates[0] },
