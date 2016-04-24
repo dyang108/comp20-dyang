@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+    <title>Comp 20 Assignment 4: Analysis of Olivia MacDougal's site</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+    <link rel="stylesheet" href="style.css" type="text/css">
+</head>
+
+<body>
+    <div class="container">
+        <h1>Security Analysis of Olivia MacDougal's Assignment 2 and 3</h1>
+        <h4>By <a href="http://dyang108.github.io/">Derick Yang</a> | April 21, 2016</h4>
+        <hr>
+        <h3>Introduction</h3>
+        <hr>
+        <p>
+            In this report, I describe certain security vulnerabilities found in <a href="http://olivaceously.github.io/">Olivia MacDougal's</a> <a>Assignment 2</a> and <a href="http://pure-waters-57228.herokuapp.com/">Assignment 3</a> for COMP 20. The site for assignment 3 displays a list of checkins by people who have sent an HTTP post request to the site, with a login, latitude, and longitude. I was hired to attack the website from all sides, by using a number of tools to compromise the functionality of Olivia's website. I will then suggest ways to improve the security of her website.
+        </p>
+        <p>
+            Vulnerabilities come in many different forms. We define a vulnerability as anything an outsider can do to affect the expected behavior of the web application. For example, outsiders (such as myself) should not be able to change the appearance of the page, crash the site for all users, or overload the database with bogus data.
+        </p>
+        <h3>Methodology</h3>
+        <hr>
+        <p>
+            I started by inspecting the website, using the JavaScript console to see what sorts of things I can change on the front end. I then started using <code>curl</code> on the command line to see if I could inject scripts into the database to be rendered and executed on the front end.
+        </p>
+        <p>
+            After attacking the site from an outsider's point of view, I then went on to search for logical flaws in the code, and ways I could manipulate the database while running the app locally. Though I tested the database manipulations locally, I have little doubt that the database injections would have had the same behavior on the Heroku app.
+        </p>
+        <h3>Abstract of findings</h3>
+        <hr>
+        <p>
+            The primary issue with the Checkins page is that the developer has put too much faith in the user. If the user 'follows all the rules,' and does not send unexpected input with the HTTP post request to the <code>/sendLocation</code> route, then the app works like a charm. However, malicious users can easily use certain tools to manipulate the expected behavior of the site.
+        </p>
+        <h3>Issues found and technical analysis of issues found</h3>
+        <hr>
+        <ol>
+            <li>
+                <strong>Issue: Cross-Site Scripting (XSS)</strong>
+                <ul>
+                    <li>
+                        Affects the root <code>/</code> checkins site.
+                    </li>
+                    <li>
+                        Severity: <strong>HIGH</strong>. An attacker can easily make the website unusable by injecting client-side JavaScript, which every user will see.
+                    </li>
+                    <li>
+                        Description: When sending <code>POST</code> data to the <code>/sendLocation</code> API, the server does not escape special characters, which can easily result in unwanted <code>&lt;script&gt;</code> tags. The browser will execute these scripts, potentially resulting in an unusable webpage for clients. These attacks can range from playfully malicious to very malicious:
+                        <img src="https://lh3.googleusercontent.com/6YwDFLflmivvxluRJdhoBkymv4B12nxsI-AMcxLhCBcYZHuYTnkd7PocJFPusI2Rq9W_hquYcY6vMOFIfAZDZQK3apCJPfwJyNVP4MjRUg66sgVOv3YI2fxB5A3X5uDUtIF8MZBWoy6ckjlgTcrVWVWvqzWpNvmOSl6g05xE21NM_hohU7U_yv7BrmeBe1JWnM5S4qtF1xf0KQ8AaP10GA64pbwihQkdntBeNPTuQfWkhZ-j4WKjsF8ylli4MMxcYr5Nvtia0kwQ328aIaep6nrjReuenLobKgdVJb8lpZhbxb96D37GLIORq2_WpAFm3x7hr-DfXZ1_Eb4bb4CM2SKg8SXs7w1Qr3d50ipejtxdLYlQfgvhgvKtpAhKcKm0MNBuJ_iN8A7piElBOYhQUM3HwTny263u42ZwAR9Y2gGEsB6RyR2TNkvBCe7uHplbKmjL-YGCMflfukl7uNL8EmzMYRaXPffgBJvLpcZWYPb6PSI26DyeyAVJziXMtsCzXmfDmBZxn9R7iAY0HTecZxGIT164OMi1bPB7c0A4YyDwnRuwZKMMIU_6f0qoZksdni70=w788-h313-no" alt="curl to red background" class="img-responsive thumbnail" /> The following is not script injection, but I thought I'd put it in anyway, because injection of <code>&lt;img&gt;</code> tags is likely not desirable:
+                        <img src="https://lh3.googleusercontent.com/Y0xdz9UO1CJD2b4bMvG6oSuvl8K1HNO-sppdffOo9NjtRa019z-FD2ftaVHgtKjheuYYSX1NsqsxX7V4Ke2RQ7sAob56voAiBWl61G657kqdfaVlRW53hQf932-eHkifJf3-UK9ylbDSgBCO2Ke9l-2bExozCsbKbPiGg4yjxgQYKRTwgX9t3V1enDGZU-AWEezC1EtdwBlKZxDOxcLkMBnpS1XWlZd41Xp5rCv2G7TiZACWn1yfsu-Z0hIHl7vrxbEHRMNqRB8B7-EWemr0pLr0xD0GqsOzjWB-hZuDpuIpo_z2UWCbgjNDmnmJQIMF33-N6XMLNYDpf31y5hI4p5anhzSc436FVtd8cAOunDTXOn1iKYzcx7TldARocrQyAHE-bF8XcfDkRJTdqNjWCyHGf62VTwaW-mZqoHq_Zu5rNWWqaf1MjrCQg-38sa1e1D74ypvK0_jRZbGKT4AQ5ggXm06aGDasIvOO-uLkb9VPXnZyDn29tMpA30XCqkdkmgRHQpcRlkNGQpZtIv-6RcOjJgXq0vG6-zXfm0UALNhwcg59njduCbbPJZCFwpB4b5ec=w1104-h462-no" alt="curl olivia" class="img-responsive thumbnail" /> The above are mild attacks against the website. On the other hand, more malicious attacks could really ruin the user experience, or cripple the site entirely: The command <code>curl --data "&lt;script&gt;var r = confirm('Click OK to continue'); if (r == true) {location = 'http://www.somemaliciouswebsite.com';} else {location = 'http://www.somemaliciouswebsite.com';}&lt;script&gt;" http://pure-waters-57228.herokuapp.com/sendLocation</code> generates the following pop-up, rendering the site unusable, and redirects the user to <code>http://www.somemaliciouswebsite.com</code> no matter what he/she selects, which is not good for the user, especially if the redirected site is actually malicious.
+                        <img src="https://lh3.googleusercontent.com/pY6LqlDfYu9fAcUt53AzphIR4Fcr4hKzGCdODY56igLYFLqJebYjsLkCZeb0-wzZ3sXl8w0TIRUKVzaVy87GGXzAOhsGTCTlW-5fg3dJUu7rieb69JecYx_H04mXXqqH606C3m-cwUavU6L1o3XlJoVtgCzT7Ut8o7A9cmN7qet7Ad_SSP18qfu9E3yRFZAzrjCwytvjbaS6my_KttDiWyc5qZeOF6iFIdSQplTnSYpbd-8xw3KSy3WyGW8JAqjWaEU0h6HKhIJCiYDFrYG9PMK-kveFBPgJHr6u0kBK-mdwAcL29zkJDt6WvIPIWlb-DtnPUyMPrHRN829DxZZ-CTsQKX6RBgpwSE7JSzbr0wqLWp2T1pki38iqupc1Uj7sPmWvk5SrQeN-fGLKzveJNCll1gjkYCsXtUXekwblU3b-Ts8seMN8nMRyM7-yDN_2kFruU8KsvsmesroYvRKlVEfq2t7X7lhy76ookfWhZtAGz4E3zmMoWHlX71t53ZLQM8GwBUEydRa6k1KG0TXyRGAFyCzlJKe8sI-93W0MrU2amfbEUvwhriIdEVXRgxrjehvC=w515-h247-no" alt="popup" class="img-responsive thumbnail" /> One can think of many other potential <code>curl</code> requests with scripts that could cripple the site, and even the user's browser, like infinite loops.
+                    </li>
+                    <li>
+                        This issue can be resolved rather easily on the server side by simply <strong>checking the user input</strong>. Potentially dangerous characters can be escaped to their HTML escape code equivalent, with code such as the following, taken from <a href="http://stackoverflow.com/questions/6234773/can-i-escape-html-special-chars-in-javascript">Stack Overflow</a>:
+                        <br><code>
+                        function escapeHtml(post_param) { <br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;return post_param.replace(/&amp;/g, "&amp;amp;").replace(/&lt;/g, "&amp;lt;").replace(/&gt;/g, "&amp;gt;").replace(/&quot;/g, "&amp;quot;").replace(/&#039;/g, "&amp;#039;");<br>
+                         }
+                        </code>
+                        This is a very simple solution to a large problem in the web application, as I have already rendered the site useless. One can also fix old 
+                    </li>
+                </ul>
+            </li>
+        </ol>
+        <h3>Conclusion</h3>
+        <hr>
+    </div>
+</body>
+
+</html>
