@@ -27,12 +27,12 @@
             I started by inspecting the website, using the JavaScript console to see what sorts of things I can change on the front end. I then started using <code>curl</code> on the command line to see if I could inject scripts into the database to be rendered and executed on the front end.
         </p>
         <p>
-            After attacking the site from an outsider's point of view, I then went on to search for logical flaws in the code, and ways I could manipulate the database while running the app locally. Though I tested the database manipulations locally, I have little doubt that the database injections would have had the same behavior on the Heroku app.
+            After attacking the site from an outsider's point of view ('black box' testing), I then went on to search for logical flaws in the code, and ways I could manipulate the database while running the app locally. Though I tested the database manipulations locally, I have little doubt that the database injections would have had the same behavior on the Heroku app.
         </p>
         <h3>Abstract of findings</h3>
         <hr>
         <p>
-            The primary issue with the Checkins page is that the developer has put too much faith in the user. If the user 'follows all the rules,' and does not send unexpected input with the HTTP post request to the <code>/sendLocation</code> route, then the app works like a charm. However, malicious users can easily use certain tools to manipulate the expected behavior of the site.
+            The primary issue with the Checkins page is that the developer has put too much faith in the user. If the user 'follows all the rules,' and does not send unexpected input with the request to the <code>/sendLocation</code> route, then the app works like a charm. However, malicious users can easily use certain tools, like <code>curl</code> or Postman to manipulate the expected behavior of the site.
         </p>
         <h3>Issues found and technical analysis of issues found</h3>
         <hr>
@@ -54,18 +54,78 @@
                     </li>
                     <li>
                         This issue can be resolved rather easily on the server side by simply <strong>checking the user input</strong>. Potentially dangerous characters can be escaped to their HTML escape code equivalent, with code such as the following, taken from <a href="http://stackoverflow.com/questions/6234773/can-i-escape-html-special-chars-in-javascript">Stack Overflow</a>:
-                        <br><code>
-                        function escapeHtml(post_param) { <br>
-                            &nbsp;&nbsp;&nbsp;&nbsp;return post_param.replace(/&amp;/g, "&amp;amp;").replace(/&lt;/g, "&amp;lt;").replace(/&gt;/g, "&amp;gt;").replace(/&quot;/g, "&amp;quot;").replace(/&#039;/g, "&amp;#039;");<br>
-                         }
-                        </code>
-                        This is a very simple solution to a large problem in the web application, as I have already rendered the site useless. One can also fix old 
+                        <br>
+                        <code><pre>
+                            function escapeHtml(post_param) {
+                                return post_param
+                                    .replace(/&amp;/g, "&amp;amp;")
+                                    .replace(/&lt;/g, "&amp;lt;")
+                                    .replace(/&gt;/g, "&amp;gt;")
+                                    .replace(/&quot;/g, "&amp;quot;")
+                                    .replace(/&#039;/g, "&amp;#039;");
+                            }
+                        </pre></code> This is a very simple solution to a large problem in the web application. I have already rendered the site useless with cross-site scripting. One can also fix older 'bad' inputs by using the <code>db.collection.update()</code> method.
+                    </li>
+                    <li>
+                        Side note: When POSTing to the <code>/sendLocation</code> API, the server does not allow non-numerical values for 'lat' and 'lng'. This is a good thing, except for the fact that the server returns an Internal Server Error rather than a 400 error. However, the input is still inserted into the database, and appears in the root API after POSTing. The type of error should be specified by the status. In this case, the error is the client's problem (invalid input), and thus should fall in the 400 range. This could be resolved by ensuring that the lat and lng are numbers before inserting into the database.
+                    </li>
+                </ul>
+            </li>
+            <li>
+                <strong>Issue: Query Parameters allow for Arbitrary Mongo Queries</strong>
+                <ul>
+                    <li>
+                        Affects the <code>/checkins.json</code> GET API.
+                    </li>
+                    <li>
+                        Severity: <strong>MEDIUM</strong>. The fact that the user can view database entries for all users is risky in general, seeing as there could be sensitive material in the database. Fortunately, in this case,there is no sensitive information in the API, and users have access to most information stored in the database anyway, through the root GET API. Either way, the checkins API should be validating query string parameters before executing the database query.
+                    </li>
+                    <li>
+                        Description: The <code>/checkins.json</code> API accepts a query string parameter, which is supposed to contain the login name for the user whose checkins we are displaying. Unfortunately, the API does not check for whether or not the query parameter is an object or not, allowing for Mongo-style queries to get through to the database. The URL <code>http://pure-waters-57228.herokuapp.com/checkins.json?login[$gt]=""</code> returns all database documents in the user database, since every document has a username 'greater than' the empty string.
+                        <img src="https://lh3.googleusercontent.com/08Jo4hDsDFFmgY4kqZDDfzC_UdBu1naStJaOqqX4Yzgrh8I1LMuhrmwm3Rd7ekrpvEAZubOndTXLHmceoRZMuuz_6PZF4xHuNG9vYWKFA-wOcymnDQ4r7XUc2TysQE-HKxPGCYWgwecHbYQjtyiGE26XREEF8yA-3QiWGqTd1NuBKKrbU2yEZt4ohSbGO5XVFL0n2uQ7X48xKNlAvCC-s3KLVrY9BthgX7InrV04x6dvW6ePmIrFI6b3akSWPxV3Ev91asUHhJfJV7GfyzJO3o88grTKQstg9FTPEc6st-ueiqBPf5xNsg7b4buOxTkbW7MR7dQ9ZsbX01QIRlRpUZjM6SM59gZspTJSNT_k_MyImk9LjwcuA_oy7PqWb0208KDtvSgH05BswsGreuVV97t19e4CyorC-PYPQc-UYEI6qKKfy4OeaRvoJaCzgLSsmxwQpiMWvLzmP_PwITwmPaKMp5K5bisILhe1-e3l8uRASvoSxyxteisiMRquY3oKZ4DjF46GbYlZVpsnZaldAc5XQqMkoRywLK2ggfRJUTNZi0CK0wyTNBRVTPaZM9nS1ppz=w1073-h715-no" alt="bad URL query" class="img-responsive thumbnail" />
+                    </li>
+                    <li>
+                        Solution: This issue can be resolved rather easily by checking whether or not the query parameter is a JSON object. A simple check, such as the following, will ensure that no arbitrary Mongo queries will be executed:
+                        <br>
+                        <code><pre>
+                        if (typeof request.query.login === "object") {
+                            response.send(400);
+                            return;
+                        }
+                        </pre></code>
+                    </li>
+                </ul>
+            </li>
+            <li>
+                <strong>Issue: Database Overload</strong>
+                <ul>
+                    <li>
+                        Affects the entire API
+                    </li>
+                    <li>
+                        Severity: <strong>MEDIUM</strong>. Database overload can be a problem for practically any web application, and this app is no exception. The 'sandbox' database that is provided for the Heroku app can only hold up to 500 MB, which can result in a database overload if too many requests are made to the server.
+                    </li>
+                    <li>
+                        Description: I ran a shell script to POST large amounts of data to the <code>/sendLocation</code> API using <code>curl "login=some_long_string&amp;lat=12&amp;lng=14</code> in an infinite loop. The script ran for a few hours and eventually resulted in a database overload, giving the 'Application Error' message on Heroku. The application has no way to ensure that large queries or large numbers of queries don't break the application.
+                        <img src="https://lh3.googleusercontent.com/-WlXuXagRQ2FGOxH9q-NjXrOgI0RcVsd3vtpcc4Z69S6PbtgyevvRMkQi42sO8H0yD1cGkzOn-2gyez23lJD758O24kgwpwJEgd1MUtzByfPcqD-6uiM5mHPlDJx8wHE4V4QJYZPHVtg1BunRJuYQpWPeuuIw7qhvxw6Z6FfBxt60iGIre0xqXwjrmzy2fAFMV2DsUlG1H7yRCFaUZmk14WOwjR86NPjYBtZWNJw75Mlb-WK-ulOmKMmjZRIebn6xqrRSo0kNl8nGJny6j7jRrMhacDdb7BfIY4WpYrhqCu1N4kjX1jHL1baW9_edwTbKmqtNwNl39kdGUUYUhFk935ZGu0noO5fA3RQyP2Rafd78o2CX3y-eN4gWbTPphTNF-GjlyAd1un5mlQhpgdv8j6P-SscafhvK8J617Ls9B0XuRHPkUQ6-B7KToqVDSsgMfc6QBsj8rBCpbudzRBRpgMVBG1Haxfk_oi9MQxCB9nZ5EU5niSEmSfgQyR3tbSiM4O4o0AJuRZX-7Rrp-ceLeKsQyLcsnYJimKBAhKsX1PQJWiVHa83EuqFlCtuRIVul5EG=w963-h547-no" alt="application error" class="img-responsive thumbnail"/>
+                    </li>
+                    <li>
+                        Solution: The server could check the size of the request parameters, using code such as the following: <br>
+                        <pre><code>
+                        if (login.length &gt;= 100 || lat.length &gt;= 100 || lng.length &gt;= 100) {
+                           response.send(400);     
+                        }
+                        </code></pre>
+                        On the other hand, ensuring that the number of requests from a particular malicious user is more difficult, requiring knowledge of the user's IP address or origin. One simple (not perfect) fix to this would be to use the Mongo 'upsert' option, which either updates or inserts a document into the database: <code>db.collection('checkins').update(criteria, {upsert: true})</code>.
                     </li>
                 </ul>
             </li>
         </ol>
         <h3>Conclusion</h3>
         <hr>
+        <p>
+            Overall, the client's site contains many vulnerabilities that can easily be fixed by simply checking and blocking malicious user input. By following the recommendations that I have suggested above, the client can easily avoid many of the most common issues that arise when deploying sites on the World Wide Web.
+        </p>
     </div>
 </body>
 
