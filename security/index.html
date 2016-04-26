@@ -16,7 +16,7 @@
         <h3>Introduction</h3>
         <hr>
         <p>
-            In this report, I describe certain security vulnerabilities found in <a href="http://olivaceously.github.io/">Olivia MacDougal's</a> <a>Assignment 2</a> and <a href="http://pure-waters-57228.herokuapp.com/">Assignment 3</a> for COMP 20. The site for assignment 3 displays a list of checkins by people who have sent an HTTP post request to the site, with a login, latitude, and longitude. I was hired to attack the website from all sides, by using a number of tools to compromise the functionality of Olivia's website. I will then suggest ways to improve the security of her website.
+            In this report, I describe certain security vulnerabilities found in <a href="http://olivaceously.github.io/">Olivia MacDougal's</a> <a href="http://pure-waters-57228.herokuapp.com/">Assignment 3</a> for COMP 20. The site for assignment 3 displays a list of checkins by people who have sent an HTTP post request to the site, with a login, latitude, and longitude. I was hired to attack the website from all sides, by using a number of tools to compromise the functionality of Olivia's website. I will then suggest ways to improve the security of her website.
         </p>
         <p>
             Vulnerabilities come in many different forms. We define a vulnerability as anything an outsider can do to affect the expected behavior of the web application. For example, outsiders (such as myself) should not be able to change the appearance of the page, crash the site for all users, or overload the database with bogus data.
@@ -32,7 +32,7 @@
         <h3>Abstract of findings</h3>
         <hr>
         <p>
-            The primary issue with the Checkins page is that the developer has put too much faith in the user. If the user 'follows all the rules,' and does not send unexpected input with the request to the <code>/sendLocation</code> route, then the app works like a charm. However, malicious users can easily use certain tools, like <code>curl</code> or Postman to manipulate the expected behavior of the site.
+            The primary issue with the checkins web API is that the developer has put too much faith in the user. If the user follows all the rules, and does not send unexpected input with the request to the <code>/sendLocation</code> route, then the app works like a charm. However, malicious users can easily use certain tools, like <code>curl</code>, Postman, or even just the browser address bar to manipulate the expected behavior of the site.
         </p>
         <h3>Issues found and technical analysis of issues found</h3>
         <hr>
@@ -107,16 +107,16 @@
                     </li>
                     <li>
                         Description: I ran a shell script to POST large amounts of data to the <code>/sendLocation</code> API using <code>curl "login=some_long_string&amp;lat=12&amp;lng=14</code> in an infinite loop. The script ran for a few hours and eventually resulted in a database overload, giving the 'Application Error' message on Heroku. The application has no way to ensure that large queries or large numbers of queries don't break the application.
-                        <img src="https://lh3.googleusercontent.com/-WlXuXagRQ2FGOxH9q-NjXrOgI0RcVsd3vtpcc4Z69S6PbtgyevvRMkQi42sO8H0yD1cGkzOn-2gyez23lJD758O24kgwpwJEgd1MUtzByfPcqD-6uiM5mHPlDJx8wHE4V4QJYZPHVtg1BunRJuYQpWPeuuIw7qhvxw6Z6FfBxt60iGIre0xqXwjrmzy2fAFMV2DsUlG1H7yRCFaUZmk14WOwjR86NPjYBtZWNJw75Mlb-WK-ulOmKMmjZRIebn6xqrRSo0kNl8nGJny6j7jRrMhacDdb7BfIY4WpYrhqCu1N4kjX1jHL1baW9_edwTbKmqtNwNl39kdGUUYUhFk935ZGu0noO5fA3RQyP2Rafd78o2CX3y-eN4gWbTPphTNF-GjlyAd1un5mlQhpgdv8j6P-SscafhvK8J617Ls9B0XuRHPkUQ6-B7KToqVDSsgMfc6QBsj8rBCpbudzRBRpgMVBG1Haxfk_oi9MQxCB9nZ5EU5niSEmSfgQyR3tbSiM4O4o0AJuRZX-7Rrp-ceLeKsQyLcsnYJimKBAhKsX1PQJWiVHa83EuqFlCtuRIVul5EG=w963-h547-no" alt="application error" class="img-responsive thumbnail"/>
+                        <img src="https://lh3.googleusercontent.com/-WlXuXagRQ2FGOxH9q-NjXrOgI0RcVsd3vtpcc4Z69S6PbtgyevvRMkQi42sO8H0yD1cGkzOn-2gyez23lJD758O24kgwpwJEgd1MUtzByfPcqD-6uiM5mHPlDJx8wHE4V4QJYZPHVtg1BunRJuYQpWPeuuIw7qhvxw6Z6FfBxt60iGIre0xqXwjrmzy2fAFMV2DsUlG1H7yRCFaUZmk14WOwjR86NPjYBtZWNJw75Mlb-WK-ulOmKMmjZRIebn6xqrRSo0kNl8nGJny6j7jRrMhacDdb7BfIY4WpYrhqCu1N4kjX1jHL1baW9_edwTbKmqtNwNl39kdGUUYUhFk935ZGu0noO5fA3RQyP2Rafd78o2CX3y-eN4gWbTPphTNF-GjlyAd1un5mlQhpgdv8j6P-SscafhvK8J617Ls9B0XuRHPkUQ6-B7KToqVDSsgMfc6QBsj8rBCpbudzRBRpgMVBG1Haxfk_oi9MQxCB9nZ5EU5niSEmSfgQyR3tbSiM4O4o0AJuRZX-7Rrp-ceLeKsQyLcsnYJimKBAhKsX1PQJWiVHa83EuqFlCtuRIVul5EG=w963-h547-no" alt="application error" class="img-responsive thumbnail" />
                     </li>
                     <li>
-                        Solution: The server could check the size of the request parameters, using code such as the following: <br>
+                        Solution: The server could check the size of the request parameters, using code such as the following:
+                        <br>
                         <pre><code>
                         if (login.length &gt;= 100 || lat.length &gt;= 100 || lng.length &gt;= 100) {
                            response.send(400);     
                         }
-                        </code></pre>
-                        On the other hand, ensuring that the number of requests from a particular malicious user is more difficult, requiring knowledge of the user's IP address or origin. One simple (not perfect) fix to this would be to use the Mongo 'upsert' option, which either updates or inserts a document into the database: <code>db.collection('checkins').update(criteria, {upsert: true})</code>.
+                        </code></pre> On the other hand, ensuring that the number of requests from a particular malicious user is more difficult, requiring knowledge of the user's IP address or origin. One simple (not perfect) fix to this would be to use the Mongo 'upsert' option, which either updates or inserts a document into the database: <code>db.collection('checkins').update(criteria, {upsert: true})</code>.
                     </li>
                 </ul>
             </li>
@@ -124,7 +124,7 @@
         <h3>Conclusion</h3>
         <hr>
         <p>
-            Overall, the client's site contains many vulnerabilities that can easily be fixed by simply checking and blocking malicious user input. By following the recommendations that I have suggested above, the client can easily avoid many of the most common issues that arise when deploying sites on the World Wide Web.
+            Overall, the client's site contains many vulnerabilities that can easily be fixed by simply checking and blocking malicious user input. By following the recommendations that I have suggested above, the client can easily avoid many of the most common issues that arise when deploying sites on the World Wide Web. I recommend taking the precautions listed above, and then investing in a more detailed investigation into the security vulnerabilities of the site. I would be happy to take a closer look and provide more security solutions for the site. I would only charge small ($1000) fee to further inspect the site.
         </p>
     </div>
 </body>
